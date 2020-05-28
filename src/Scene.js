@@ -17,15 +17,15 @@ class Scene extends THREE.Scene {
         // Tras crear cada elemento se añadirá a la escena con   this.add(variable)
         this.createLights ();
         
-        // Tendremos una cámara con un control de movimiento con el ratón
-        this.createCamera ();
-        
         // Y unos ejes. Imprescindibles para orientarnos sobre dónde están las cosas
         this.axis = new THREE.AxesHelper (5);
         this.add (this.axis);
         
         this.pacman = new PacMan(0x1AF2EF);
         this.add(this.pacman);
+
+        // Tendremos una cámara con un control de movimiento con el ratón
+        this.createCamera ();
     }
     
     createCamera () {
@@ -34,21 +34,13 @@ class Scene extends THREE.Scene {
         //   La razón de aspecto ancho/alto
         //   Los planos de recorte cercano y lejano
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        // También se indica dónde se coloca
-        this.camera.position.set (20, 10, 20);
-        // Y hacia dónde mira
-        var look = new THREE.Vector3 (0,0,0);
-        this.camera.lookAt(look);
-        this.add (this.camera);
+        this.add(this.camera);
+
+        // Posicionar camara
+        this.camera.position.set (this.pacman.position.x, 10, this.pacman.position.z + 10);
         
-        // Para el control de cámara usamos una clase que ya tiene implementado los movimientos de órbita
-        this.cameraControl = new THREE.TrackballControls (this.camera, this.renderer.domElement);
-        // Se configuran las velocidades de los movimientos
-        this.cameraControl.rotateSpeed = 5;
-        this.cameraControl.zoomSpeed = -2;
-        this.cameraControl.panSpeed = 0.5;
-        // Debe orbitar con respecto al punto de mira de la cámara
-        this.cameraControl.target = look;
+        // Indicar hacia donde mira la camara
+        this.camera.lookAt(this.pacman.position);
     }
     
     createGround () {
@@ -177,7 +169,7 @@ class Scene extends THREE.Scene {
         }
     }
   
-    update () {
+    update() {
         // Este método debe ser llamado cada vez que queramos visualizar la escena de nuevo.
         
         // Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
@@ -191,14 +183,19 @@ class Scene extends THREE.Scene {
         // Se muestran o no los ejes según lo que idique la GUI
         this.axis.visible = this.guiControls.axisOnOff;
         
-        // Se actualiza la posición de la cámara según su controlador
-        this.cameraControl.update();
-        
         // Se actualiza el resto del modelo
         this.pacman.update();
+
+        // Actualizar camara
+        this.updateCamara();        
         
         // Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
         this.renderer.render (this, this.getCamera());
+    }
+
+    updateCamara() {
+        this.camera.position.set(this.pacman.position.x, 10, this.pacman.position.z + 10);
+        this.camera.lookAt(this.pacman.position);
     }
 }
   

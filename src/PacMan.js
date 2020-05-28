@@ -85,19 +85,19 @@ class PacMan extends THREE.Object3D {
         switch(this.orientation) {
             case orientations.UP:
                 this.pacman.rotation.y = Math.PI / 2;
-                this.pacman.position.z -= distanceIncrement;
+                this.position.z -= distanceIncrement;
                 break;
             case orientations.DOWN:
                 this.pacman.rotation.y = -Math.PI / 2;
-                this.pacman.position.z += distanceIncrement;
+                this.position.z += distanceIncrement;
                 break;
             case orientations.LEFT:
                 this.pacman.rotation.y = Math.PI;
-                this.pacman.position.x -= distanceIncrement;
+                this.position.x -= distanceIncrement;
                 break;
             case orientations.RIGHT:
                 this.pacman.rotation.y = 0;
-                this.pacman.position.x += distanceIncrement;
+                this.position.x += distanceIncrement;
                 break;
         }
         
