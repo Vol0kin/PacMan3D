@@ -24,7 +24,7 @@ class Scene extends THREE.Scene {
         this.axis = new THREE.AxesHelper (5);
         this.add (this.axis);
         
-        this.pacman = new PacMan();
+        this.pacman = new Ghost(0x1AF2EF);
         this.add(this.pacman);
     }
     

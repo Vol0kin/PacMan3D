@@ -46,6 +46,8 @@ class PacMan extends THREE.Object3D {
         this.pacman.add(lowerMouthMesh);
         this.pacman.add(leftEyeMesh);
         this.pacman.add(rightEyeMesh);
+        this.pacman.position.y += 0.5;
+        this.pacman.rotation.y = -Math.PI / 2;
 
         this.add(this.pacman);
 
