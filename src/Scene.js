@@ -24,7 +24,7 @@ class Scene extends THREE.Scene {
         this.axis = new THREE.AxesHelper (5);
         this.add (this.axis);
         
-        this.pacman = new Ghost(0x1AF2EF);
+        this.pacman = new PacMan(0x1AF2EF);
         this.add(this.pacman);
     }
     
@@ -155,6 +155,27 @@ class Scene extends THREE.Scene {
         // Y también el tamaño del renderizador
         this.renderer.setSize (window.innerWidth, window.innerHeight);
     }
+
+    onKeyPress(event) {
+        // Obtener tecla
+        var key = event.which;
+
+        // Procesar evento
+        switch(String.fromCharCode(key).toUpperCase()) {
+            case "A":
+                this.pacman.setOrientation(orientations.LEFT);
+                break;
+            case "S":
+                this.pacman.setOrientation(orientations.DOWN);
+                break;
+            case "D":
+                this.pacman.setOrientation(orientations.RIGHT);
+                break;
+            case "W":
+                this.pacman.setOrientation(orientations.UP);
+                break;
+        }
+    }
   
     update () {
         // Este método debe ser llamado cada vez que queramos visualizar la escena de nuevo.
@@ -189,6 +210,7 @@ $(function () {
     
     // Se añaden los listener de la aplicación. En este caso, el que va a comprobar cuándo se modifica el tamaño de la ventana de la aplicación.
     window.addEventListener ("resize", () => scene.onWindowResize());
+    window.addEventListener("keypress", (event) => scene.onKeyPress(event));
     
     // Visualizacion de la escena
     scene.update();

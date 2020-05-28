@@ -3,8 +3,10 @@
  */
 class Ghost extends THREE.Object3D {
     constructor(ghostColor) {
-        // Llamar al constructor de la superclase
         super();
+
+        // Establecer orientacion
+        this.orientation = orientations.DOWN;
 
         // Crear materiales
         var ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});

@@ -5,6 +5,11 @@ class PacMan extends THREE.Object3D {
     constructor() {
         super();
 
+        // Establecer orientacion
+        this.orientation = orientations.DOWN;
+        this.speed = 1;
+        this.lastUpdateTime = Date.now();
+
         // Materiales del cuerpo y el ojo
         var bodyMaterial = new THREE.MeshPhongMaterial({color: 0xF2F21A});
         var eyeMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
@@ -67,9 +72,37 @@ class PacMan extends THREE.Object3D {
             .start();
     }
 
+    setOrientation(orientation) {
+        this.orientation = orientation;
+    }
+
     update() {
-        //this.position.x += 0.005;
+        // Obtener incremento de tiempo (en segundos)
+        var currentTime = Date.now();
+        var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
+        var distanceIncrement = this.speed * deltaTime;
+
+        switch(this.orientation) {
+            case orientations.UP:
+                this.pacman.rotation.y = Math.PI / 2;
+                this.pacman.position.z -= distanceIncrement;
+                break;
+            case orientations.DOWN:
+                this.pacman.rotation.y = -Math.PI / 2;
+                this.pacman.position.z += distanceIncrement;
+                break;
+            case orientations.LEFT:
+                this.pacman.rotation.y = Math.PI;
+                this.pacman.position.x -= distanceIncrement;
+                break;
+            case orientations.RIGHT:
+                this.pacman.rotation.y = 0;
+                this.pacman.position.x += distanceIncrement;
+                break;
+        }
         
         TWEEN.update();
+
+        this.lastUpdateTime = currentTime;
     }
 }
