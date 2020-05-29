@@ -21,11 +21,31 @@ class Scene extends THREE.Scene {
         this.axis = new THREE.AxesHelper (5);
         this.add (this.axis);
         
-        this.pacman = new PacMan(0x1AF2EF);
+        this.pacman = new PacMan();
         this.add(this.pacman);
+
+        var ghost = new Ghost(0x1AF2EF);
+        this.add(ghost);
+        ghost.position.z = -1;
 
         // Tendremos una cámara con un control de movimiento con el ratón
         this.createCamera ();
+
+        var wall = new Wall();
+        this.add(wall);
+        wall.position.x = -1;
+
+        var dot = new Dot(0.1);
+        this.add(dot);
+        dot.position.x = 1;
+
+        var bigDot = new Dot(0.2);
+        this.add(bigDot);
+        bigDot.position.x = 2;
+
+        var smallDot = new Dot(0.1);
+        this.add(smallDot);
+        smallDot.position.x = 3;
     }
     
     createCamera () {

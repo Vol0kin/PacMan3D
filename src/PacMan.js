@@ -20,7 +20,7 @@ class PacMan extends THREE.Object3D {
         // Crear parte superior e inferior de la boca
         var radiusMouth = 0.5;
         var segmentsMouth = 25;
-        var uppperMouthGeometry = new THREE.SphereGeometry(radiusMouth, segmentsMouth, segmentsMouth, 0, Math.PI);
+        var uppperMouthGeometry = new THREE.SphereBufferGeometry(radiusMouth, segmentsMouth, segmentsMouth, 0, Math.PI);
 
         uppperMouthGeometry.rotateX(-Math.PI / 2);
 
@@ -35,7 +35,7 @@ class PacMan extends THREE.Object3D {
         var segmentsEyes = 15;
         var eyeAngle = (40 * Math.PI) / 180;
 
-        var leftEyeGeometry = new THREE.SphereGeometry(radiusEyes, segmentsEyes, segmentsEyes);
+        var leftEyeGeometry = new THREE.SphereBufferGeometry(radiusEyes, segmentsEyes, segmentsEyes);
         var rightEyeGeometry = leftEyeGeometry.clone();
         
         var leftEyeMesh = new THREE.Mesh(leftEyeGeometry, eyeMaterial);

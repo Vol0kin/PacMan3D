@@ -16,7 +16,7 @@ class Ghost extends THREE.Object3D {
         // Crear cabeza del fantasma
         var radius = 0.5;
         var segments = 25;
-        var head = new THREE.SphereGeometry(radius, segments, segments, 0, Math.PI);
+        var head = new THREE.SphereBufferGeometry(radius, segments, segments, 0, Math.PI);
 
         var headMesh = new THREE.Mesh(head, ghostMaterial);
 
@@ -24,13 +24,13 @@ class Ghost extends THREE.Object3D {
         headMesh.position.y += 0.5;
 
         // Crear cuerpo
-        var boydGeometry = new THREE.CylinderGeometry(radius, radius, 0.52, segments)
+        var boydGeometry = new THREE.CylinderBufferGeometry(radius, radius, 0.52, segments)
         var bodyMesh = new THREE.Mesh(boydGeometry, ghostMaterial);
 
         bodyMesh.position.y += 0.25;
 
         // Crear ojos
-        var eyeGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, segments);
+        var eyeGeometry = new THREE.CylinderBufferGeometry(0.5, 0.5, 0.1, segments);
 
         eyeGeometry.scale(0.15, 0.5, 0.4);
         eyeGeometry.rotateX(Math.PI/2);
