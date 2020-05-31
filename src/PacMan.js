@@ -9,6 +9,7 @@ class PacMan extends THREE.Object3D {
         this.orientation = orientations.DOWN;
         this.speed = 4;
         this.lastUpdateTime = Date.now();
+        this.animationPaused = false;
 
         // Materiales del cuerpo y el ojo
         var bodyMaterial = new THREE.MeshPhongMaterial({color: 0xF2F21A});
@@ -60,7 +61,7 @@ class PacMan extends THREE.Object3D {
         var initMouthPosition = {alfa: 0};
         var endMouthPosition = {alfa: Math.PI / 6};
         
-        var mouthAnimation = new TWEEN.Tween(initMouthPosition)
+        this.mouthAnimation = new TWEEN.Tween(initMouthPosition)
             .to(endMouthPosition, 1000)
             .easing(TWEEN.Easing.Linear.None)
             .onUpdate(() => {
@@ -97,14 +98,26 @@ class PacMan extends THREE.Object3D {
         }
     }
 
-    update(stop) {
-        // Obtener incremento de tiempo (en segundos)
+    update(collided) {
+        // Obtener incremento en la distancia recorrida desde la ultima acutalizacion
         var currentTime = Date.now();
         var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         var distanceIncrement = this.speed * deltaTime;
-        this.updateOrientation();
-        if (!stop) {
 
+        // Orientar correctamente el objeto
+        this.updateOrientation();
+
+        // Controlar estado de la animacion
+        if (collided && !this.animationPaused) {
+            this.animationPaused = true;
+            this.mouthAnimation.pause();
+        } else if (!collided && this.animationPaused) {
+            this.animationPaused = false;
+            this.mouthAnimation.resume();
+        }
+        
+        // Controlar movimiento en funcion de la orientacion
+        if (!collided) {
             switch(this.orientation) {
                 case orientations.UP:
                     this.position.z -= distanceIncrement;

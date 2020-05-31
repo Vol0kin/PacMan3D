@@ -15,6 +15,10 @@ class Scene extends THREE.Scene {
             'P': cellType.PACMAN,
             'G': cellType.GHOST 
         }
+        this.remainingPoints = 0;
+        this.score = 0;
+        this.SMALL_DOT_POINTS = 10;
+        this.BIG_DOT_POINTS = 50;
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -23,6 +27,7 @@ class Scene extends THREE.Scene {
         this.gui = this.createGUI ();
         
         // Construimos los distinos elementos que tendremos en la escena
+        this.createGround();
         
         // Todo elemento que se desee sea tenido en cuenta en el renderizado de la escena debe pertenecer a esta. Bien como hijo de la escena (this en esta clase) o como hijo de un elemento que ya esté en la escena.
         // Tras crear cada elemento se añadirá a la escena con   this.add(variable)
@@ -42,6 +47,7 @@ class Scene extends THREE.Scene {
         // Tendremos una cámara con un control de movimiento con el ratón
         this.createCamera ();
         this.createMap();
+        document.getElementById('Score').textContent = this.score;
     }
     
     createCamera () {
@@ -60,20 +66,11 @@ class Scene extends THREE.Scene {
     }
     
     createGround () {
-        // El suelo es un Mesh, necesita una geometría y un material.
-        
-        // La geometría es una caja con muy poca altura
-        var geometryGround = new THREE.BoxGeometry (100,0.2,100);
-        
-        // El material se hará con una textura de madera
-        var texture = new THREE.TextureLoader().load('../imgs/wood.jpg');
-        var materialGround = new THREE.MeshPhongMaterial ({map: texture});
-        
-        // Ya se puede construir el Mesh
-        var ground = new THREE.Mesh (geometryGround, materialGround);
-        
-        // Todas las figuras se crean centradas en el origen.
-        // El suelo lo bajamos la mitad de su altura para que el origen del mundo se quede en su lado superior
+        var groundGeometry = new THREE.BoxGeometry(100, 0.2, 100);
+        var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
+
+        var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+
         ground.position.y = -0.1;
         
         // Que no se nos olvide añadirlo a la escena, que en este caso es  this
@@ -200,12 +197,14 @@ class Scene extends THREE.Scene {
                         smallDotMesh.position.set(i, 0, zPos);
                         smallDotMesh.name = "smallDot_" + i + "_" + zPos;
                         that.add(smallDotMesh);
+                        that.remainingPoints++;
                         break;
                     case cellType.BIG_DOT:
                         let bigDotMesh = new Dot(0.2);
                         bigDotMesh.position.set(i, 0, zPos);
                         bigDotMesh.name = "bigDot_" + i + "_" + zPos;
                         that.add(bigDotMesh);
+                        that.remainingPoints++;
                         break;
                 }
             }
@@ -242,41 +241,30 @@ class Scene extends THREE.Scene {
         var key = event.which;
 
         var prevOrientation = this.pacman.getOrientation();
+        var adjustPosition = false;
 
         // Procesar evento
         switch(String.fromCharCode(key).toUpperCase()) {
             case "A":
                 this.pacman.setOrientation(orientations.LEFT);
-
-                if (prevOrientation != orientations.RIGHT) {
-                    this.pacman.position.round();
-                }
-
+                adjustPosition = prevOrientation != orientations.RIGHT && prevOrientation != orientations.LEFT;
                 break;
             case "S":
                 this.pacman.setOrientation(orientations.DOWN);
-
-                if (prevOrientation != orientations.UP) {
-                    this.pacman.position.round();
-                }
-
+                adjustPosition = prevOrientation != orientations.UP && prevOrientation != orientations.DOWN;
                 break;
             case "D":
                 this.pacman.setOrientation(orientations.RIGHT);
-
-                if (prevOrientation != orientations.LEFT) {
-                    this.pacman.position.round();
-                }
-
+                adjustPosition = prevOrientation != orientations.LEFT && prevOrientation != orientations.RIGHT;
                 break;
             case "W":
                 this.pacman.setOrientation(orientations.UP);
-
-                if (prevOrientation != orientations.DOWN) {
-                    this.pacman.position.round();
-                }
-
+                adjustPosition = prevOrientation != orientations.DOWN && prevOrientation != orientations.UP;
                 break;
+        }
+
+        if (adjustPosition) {
+            this.pacman.position.round();
         }
     }
   
@@ -296,17 +284,27 @@ class Scene extends THREE.Scene {
         
         // Se actualiza el resto del modelo
         
-        this.collision = this.checkCollisionWithWall();
-        this.pacman.update(this.collision);
+        var collision = this.checkCollisionWithWall();
+        this.pacman.update(collision);
         
         this.updateGameMap();
-        
+
+        var pacmanPos = this.pacman.position.clone();
+        pacmanPos.floor();
+
+        // Pasar de un lado del mapa al otro
+        if (pacmanPos.z == 14 && pacmanPos.x > this.objectsMap[0].length - 1) {
+            this.pacman.position.x = 0;
+        } else if (pacmanPos.z == 14 && pacmanPos.x < -1) {
+            this.pacman.position.x = this.objectsMap[0].length - 1;
+        }        
 
         // Actualizar camara
         this.updateCamara();        
         
         // Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
         this.renderer.render (this, this.getCamera());
+        document.getElementById('Score').textContent = this.score;
     }
 
     updateCamara() {
@@ -321,9 +319,19 @@ class Scene extends THREE.Scene {
         //console.log(xPos, zPos);
 
         var selectedSmallDot = this.getObjectByName("smallDot_" + xPos + "_" + zPos);
-        this.remove(selectedSmallDot);
-
         var selectedBigDot = this.getObjectByName("bigDot_" + xPos + "_" + zPos);
+
+        if (selectedSmallDot != undefined) {
+            this.remainingPoints--;
+            this.score += this.SMALL_DOT_POINTS;
+        }
+
+        if (selectedBigDot != undefined) {
+            this.remainingPoints--;
+            this.score += this.BIG_DOT_POINTS;
+        }
+
+        this.remove(selectedSmallDot);
         this.remove(selectedBigDot);
     }
 
