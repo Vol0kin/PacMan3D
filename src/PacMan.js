@@ -52,7 +52,7 @@ class PacMan extends THREE.Object3D {
         this.pacman.add(leftEyeMesh);
         this.pacman.add(rightEyeMesh);
         this.pacman.position.y += 0.5;
-        this.pacman.rotation.y = -Math.PI / 2;
+        //this.pacman.rotation.y = -Math.PI / 2;
 
         this.add(this.pacman);
 
@@ -76,32 +76,52 @@ class PacMan extends THREE.Object3D {
         this.orientation = orientation;
     }
 
-    update() {
+    getOrientation() {
+        return this.orientation;
+    }
+
+    updateOrientation() {
+        switch(this.orientation) {
+            case orientations.UP:
+                this.pacman.rotation.y = Math.PI / 2;
+                break;
+            case orientations.DOWN:
+                this.pacman.rotation.y = -Math.PI / 2;
+                break;
+            case orientations.LEFT:
+                this.pacman.rotation.y = Math.PI;
+                break;
+            case orientations.RIGHT:
+                this.pacman.rotation.y = 0;
+                break;
+        }
+    }
+
+    update(stop) {
         // Obtener incremento de tiempo (en segundos)
         var currentTime = Date.now();
         var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         var distanceIncrement = this.speed * deltaTime;
+        this.updateOrientation();
+        if (!stop) {
 
-        switch(this.orientation) {
-            case orientations.UP:
-                this.pacman.rotation.y = Math.PI / 2;
-                this.position.z -= distanceIncrement;
-                break;
-            case orientations.DOWN:
-                this.pacman.rotation.y = -Math.PI / 2;
-                this.position.z += distanceIncrement;
-                break;
-            case orientations.LEFT:
-                this.pacman.rotation.y = Math.PI;
-                this.position.x -= distanceIncrement;
-                break;
-            case orientations.RIGHT:
-                this.pacman.rotation.y = 0;
-                this.position.x += distanceIncrement;
-                break;
+            switch(this.orientation) {
+                case orientations.UP:
+                    this.position.z -= distanceIncrement;
+                    break;
+                case orientations.DOWN:
+                    this.position.z += distanceIncrement;
+                    break;
+                case orientations.LEFT:
+                    this.position.x -= distanceIncrement;
+                    break;
+                case orientations.RIGHT:
+                    this.position.x += distanceIncrement;
+                    break;
+            }
+            
+            TWEEN.update();
         }
-        
-        TWEEN.update();
 
         this.lastUpdateTime = currentTime;
     }

@@ -4,6 +4,17 @@
 class Scene extends THREE.Scene {
     constructor (myCanvas) {
         super();
+
+        this.collision = false;
+        this.objectsMap = [];
+        this.correspondence = {
+            '#': cellType.WALL,
+            ' ': cellType.EMPTY,
+            '.': cellType.SMALL_DOT,
+            'o': cellType.BIG_DOT,
+            'P': cellType.PACMAN,
+            'G': cellType.GHOST 
+        }
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -46,6 +57,7 @@ class Scene extends THREE.Scene {
         var smallDot = new Dot(0.1);
         this.add(smallDot);
         smallDot.position.x = 3;
+        this.createMap();
     }
     
     createCamera () {
@@ -144,6 +156,79 @@ class Scene extends THREE.Scene {
         
         return renderer;  
     }
+
+    createMap() {
+        var stringMap = [
+            "############################",
+            "#............##............#",
+            "#.####.#####.##.#####.####.#",
+            "#o####.#####.##.#####.####o#",
+            "#.####.#####.##.#####.####.#",
+            "#..........................#",
+            "#.####.##.########.##.####.#",
+            "#.####.##.########.##.####.#",
+            "#......##....##....##......#",
+            "######.##### ## #####.######",
+            "     #.##### ## #####.#     ",
+            "     #.##     G    ##.#     ",
+            "     #.## ######## ##.#     ",
+            "######.## #      # ##.######",
+            "      .   #      #   .      ",
+            "######.## #      # ##.######",
+            "     #.## ######## ##.#     ",
+            "     #.##          ##.#     ",
+            "     #.## ######## ##.#     ",
+            "######.## ######## ##.######",
+            "#............##............#",
+            "#.####.#####.##.#####.####.#",
+            "#.####.#####.##.#####.####.#",
+            "#o..##....... P.......##..o#",
+            "###.##.##.########.##.##.###",
+            "###.##.##.########.##.##.###",
+            "#......##....##....##......#",
+            "#.##########.##.##########.#",
+            "#.##########.##.##########.#",
+            "#..........................#",
+            "############################"
+        ];
+        var that = this;
+
+        stringMap.forEach(function(item, index) {
+            let row = [];
+
+            for (let i = 0; i < item.length; i++) {
+                var meshType = that.correspondence[item.charAt(i)];
+                row.push(meshType);
+
+                let zPos = index;
+
+                switch(meshType) {
+                    case cellType.WALL:
+                        let wallMesh = new Wall();
+                        wallMesh.position.set(i, 0, zPos);
+                        that.add(wallMesh);
+                        break;
+                    case cellType.PACMAN:
+                        that.pacman.position.set(i, 0, zPos);
+                        break;
+                    case cellType.SMALL_DOT:
+                        let smallDotMesh = new Dot(0.1);
+                        smallDotMesh.position.set(i, 0, zPos);
+                        smallDotMesh.name = "smallDot_" + i + "_" + zPos;
+                        that.add(smallDotMesh);
+                        break;
+                    case cellType.BIG_DOT:
+                        let bigDotMesh = new Dot(0.3);
+                        bigDotMesh.position.set(i, 0, zPos);
+                        bigDotMesh.name = "bigDot_" + i + "_" + zPos;
+                        that.add(bigDotMesh);
+                        break;
+                }
+            }
+
+            that.objectsMap.push(row);
+        });
+    }
     
     getCamera () {
         // En principio se devuelve la única cámara que tenemos
@@ -204,7 +289,12 @@ class Scene extends THREE.Scene {
         this.axis.visible = this.guiControls.axisOnOff;
         
         // Se actualiza el resto del modelo
-        this.pacman.update();
+        
+        this.collision = this.checkCollisionWithWall();
+        this.pacman.update(this.collision);
+        
+        this.updateGameMap();
+        
 
         // Actualizar camara
         this.updateCamara();        
@@ -216,6 +306,45 @@ class Scene extends THREE.Scene {
     updateCamara() {
         this.camera.position.set(this.pacman.position.x, 10, this.pacman.position.z + 10);
         this.camera.lookAt(this.pacman.position);
+    }
+
+    updateGameMap() {
+        var xPos = Math.floor(this.pacman.position.x + 0.5);
+        var zPos = Math.floor(this.pacman.position.z + 0.5);
+
+        //console.log(xPos, zPos);
+
+        var selectedSmallDot = this.getObjectByName("smallDot_" + xPos + "_" + zPos);
+        this.remove(selectedSmallDot);
+
+        var selectedBigDot = this.getObjectByName("bigDot_" + xPos + "_" + zPos);
+        this.remove(selectedBigDot);
+    }
+
+    checkCollisionWithWall() {
+        var collided = false;
+
+        var xPos = Math.floor(this.pacman.position.x);
+        var zPos = Math.floor(this.pacman.position.z);
+
+        switch(this.pacman.getOrientation()) {
+            case orientations.UP:
+                collided = this.objectsMap[zPos][xPos] == cellType.WALL;
+                break;
+            case orientations.DOWN:
+                collided = this.objectsMap[zPos + 1][xPos] == cellType.WALL;
+                break;
+            case orientations.LEFT:
+                collided = this.objectsMap[zPos][xPos] == cellType.WALL;
+                break;
+            case orientations.RIGHT:
+                collided = this.objectsMap[zPos][xPos + 1] == cellType.WALL;
+                break;
+        }
+
+        console.log(collided);
+
+        return collided;
     }
 }
   
