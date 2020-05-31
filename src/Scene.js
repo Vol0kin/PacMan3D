@@ -41,22 +41,6 @@ class Scene extends THREE.Scene {
 
         // Tendremos una cámara con un control de movimiento con el ratón
         this.createCamera ();
-
-        var wall = new Wall();
-        this.add(wall);
-        wall.position.x = -1;
-
-        var dot = new Dot(0.1);
-        this.add(dot);
-        dot.position.x = 1;
-
-        var bigDot = new Dot(0.2);
-        this.add(bigDot);
-        bigDot.position.x = 2;
-
-        var smallDot = new Dot(0.1);
-        this.add(smallDot);
-        smallDot.position.x = 3;
         this.createMap();
     }
     
@@ -218,7 +202,7 @@ class Scene extends THREE.Scene {
                         that.add(smallDotMesh);
                         break;
                     case cellType.BIG_DOT:
-                        let bigDotMesh = new Dot(0.3);
+                        let bigDotMesh = new Dot(0.2);
                         bigDotMesh.position.set(i, 0, zPos);
                         bigDotMesh.name = "bigDot_" + i + "_" + zPos;
                         that.add(bigDotMesh);
@@ -257,19 +241,41 @@ class Scene extends THREE.Scene {
         // Obtener tecla
         var key = event.which;
 
+        var prevOrientation = this.pacman.getOrientation();
+
         // Procesar evento
         switch(String.fromCharCode(key).toUpperCase()) {
             case "A":
                 this.pacman.setOrientation(orientations.LEFT);
+
+                if (prevOrientation != orientations.RIGHT) {
+                    this.pacman.position.round();
+                }
+
                 break;
             case "S":
                 this.pacman.setOrientation(orientations.DOWN);
+
+                if (prevOrientation != orientations.UP) {
+                    this.pacman.position.round();
+                }
+
                 break;
             case "D":
                 this.pacman.setOrientation(orientations.RIGHT);
+
+                if (prevOrientation != orientations.LEFT) {
+                    this.pacman.position.round();
+                }
+
                 break;
             case "W":
                 this.pacman.setOrientation(orientations.UP);
+
+                if (prevOrientation != orientations.DOWN) {
+                    this.pacman.position.round();
+                }
+
                 break;
         }
     }
@@ -324,8 +330,8 @@ class Scene extends THREE.Scene {
     checkCollisionWithWall() {
         var collided = false;
 
-        var xPos = Math.floor(this.pacman.position.x);
-        var zPos = Math.floor(this.pacman.position.z);
+        var xPos = Math.round(this.pacman.position.x - 0.5);
+        var zPos = Math.round(this.pacman.position.z - 0.5);
 
         switch(this.pacman.getOrientation()) {
             case orientations.UP:

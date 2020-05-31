@@ -7,7 +7,7 @@ class PacMan extends THREE.Object3D {
 
         // Establecer orientacion
         this.orientation = orientations.DOWN;
-        this.speed = 1;
+        this.speed = 4;
         this.lastUpdateTime = Date.now();
 
         // Materiales del cuerpo y el ojo
