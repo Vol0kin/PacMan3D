@@ -1,15 +1,9 @@
 /**
  * Clase que representa un fantasma
  */
-class Ghost extends THREE.Object3D {
+class Ghost extends Character3D {
     constructor(ghostColor) {
-        super();
-
-        this.lastUpdateTime = Date.now();
-
-        // Establecer orientacion
-        this.speed = 2;
-        this.orientation = orientations.LEFT;
+        super(2, orientations.LEFT);
         this.spawned = false;
 
         // Crear materiales
@@ -64,31 +58,6 @@ class Ghost extends THREE.Object3D {
         this.ghost.rotation.y = Math.PI/2;
 
         this.add(this.ghost);
-    }
-
-    updateOrientation() {
-        switch(this.orientation) {
-            case orientations.UP:
-                this.rotation.y = Math.PI / 2;
-                break;
-            case orientations.DOWN:
-                this.rotation.y = -Math.PI / 2;
-                break;
-            case orientations.LEFT:
-                this.rotation.y = Math.PI;
-                break;
-            case orientations.RIGHT:
-                this.rotation.y = 0;
-                break;
-        }
-    }
-
-    setOrientation(orientation) {
-        this.orientation = orientation;
-    }
-
-    getOrientation() {
-        return this.orientation;
     }
 
     setSpawned(spawned) {

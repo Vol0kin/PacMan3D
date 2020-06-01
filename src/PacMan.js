@@ -1,14 +1,11 @@
 /**
  * Clase que representa al PacMan.
  */
-class PacMan extends THREE.Object3D {
+class PacMan extends Character3D {
     constructor() {
-        super();
+        super(2, orientations.LEFT);
 
         // Establecer orientacion
-        this.orientation = orientations.LEFT;
-        this.speed = 2;
-        this.lastUpdateTime = Date.now();
         this.animationPaused = false;
 
         // Materiales del cuerpo y el ojo
@@ -70,31 +67,6 @@ class PacMan extends THREE.Object3D {
             .repeat(Infinity)
             .yoyo(true)
             .start();
-    }
-
-    setOrientation(orientation) {
-        this.orientation = orientation;
-    }
-
-    getOrientation() {
-        return this.orientation;
-    }
-
-    updateOrientation() {
-        switch(this.orientation) {
-            case orientations.UP:
-                this.rotation.y = Math.PI / 2;
-                break;
-            case orientations.DOWN:
-                this.rotation.y = -Math.PI / 2;
-                break;
-            case orientations.LEFT:
-                this.rotation.y = Math.PI;
-                break;
-            case orientations.RIGHT:
-                this.rotation.y = 0;
-                break;
-        }
     }
 
     update(collided) {
