@@ -5,8 +5,11 @@ class Ghost extends THREE.Object3D {
     constructor(ghostColor) {
         super();
 
+        this.lastUpdateTime = Date.now();
+
         // Establecer orientacion
-        this.orientation = orientations.DOWN;
+        this.speed = 2;
+        this.orientation = orientations.LEFT;
 
         // Crear materiales
         var ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
@@ -33,7 +36,7 @@ class Ghost extends THREE.Object3D {
         var eyeGeometry = new THREE.CylinderBufferGeometry(0.5, 0.5, 0.1, segments);
 
         eyeGeometry.scale(0.15, 0.5, 0.4);
-        eyeGeometry.rotateX(Math.PI/2);
+        eyeGeometry.rotateX(-Math.PI/2);
         eyeGeometry.translate(-0.15, 0.5, 0.5);
 
         var pupilGeometry = eyeGeometry.clone();
@@ -51,13 +54,65 @@ class Ghost extends THREE.Object3D {
         var rightEyeMesh = leftEyeMesh.clone();
         rightEyeMesh.position.x += 0.3;
 
-        this.add(headMesh);
-        this.add(bodyMesh);
-        this.add(leftEyeMesh);
-        this.add(rightEyeMesh)
+        this.ghost = new THREE.Object3D();
+        
+        this.ghost.add(headMesh);
+        this.ghost.add(bodyMesh);
+        this.ghost.add(leftEyeMesh);
+        this.ghost.add(rightEyeMesh);
+        this.ghost.rotation.y = Math.PI/2;
+
+        this.add(this.ghost);
     }
 
-    update() {
+    updateOrientation() {
+        switch(this.orientation) {
+            case orientations.UP:
+                this.rotation.y = Math.PI / 2;
+                break;
+            case orientations.DOWN:
+                this.rotation.y = -Math.PI / 2;
+                break;
+            case orientations.LEFT:
+                this.rotation.y = Math.PI;
+                break;
+            case orientations.RIGHT:
+                this.rotation.y = 0;
+                break;
+        }
+    }
 
+    setOrientation(orientation) {
+        this.orientation = orientation;
+    }
+
+    getOrientation() {
+        return this.orientation;
+    }
+
+    update(collided) {
+        // Obtener incremento en la distancia recorrida desde la ultima acutalizacion
+        var currentTime = Date.now();
+        var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
+        var distanceIncrement = this.speed * deltaTime;
+
+        this.updateOrientation();
+
+        switch(this.orientation) {
+            case orientations.UP:
+                this.position.z -= distanceIncrement;
+                break;
+            case orientations.DOWN:
+                this.position.z += distanceIncrement;
+                break;
+            case orientations.LEFT:
+                this.position.x -= distanceIncrement;
+                break;
+            case orientations.RIGHT:
+                this.position.x += distanceIncrement;
+                break;
+        }
+
+        this.lastUpdateTime = currentTime;
     }
 }

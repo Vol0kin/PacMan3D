@@ -19,6 +19,7 @@ class Scene extends THREE.Scene {
         this.score = 0;
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
+        this.directionCounter = 0;
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -40,9 +41,8 @@ class Scene extends THREE.Scene {
         this.pacman = new PacMan();
         this.add(this.pacman);
 
-        var ghost = new Ghost(0x1AF2EF);
-        this.add(ghost);
-        ghost.position.z = -1;
+        this.ghost = new Ghost(0x1AF2EF);
+        this.add(this.ghost);
 
         // Tendremos una cámara con un control de movimiento con el ratón
         this.createCamera ();
@@ -206,6 +206,9 @@ class Scene extends THREE.Scene {
                         that.add(bigDotMesh);
                         that.remainingPoints++;
                         break;
+                    case cellType.GHOST:
+                        that.ghost.position.set(i, 0, zPos);
+                        break;
                 }
             }
 
@@ -269,6 +272,7 @@ class Scene extends THREE.Scene {
     }
   
     update() {
+        this.directionCounter++;
         // Este método debe ser llamado cada vez que queramos visualizar la escena de nuevo.
         
         // Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
@@ -286,6 +290,10 @@ class Scene extends THREE.Scene {
         
         var collision = this.checkCollisionWithWall();
         this.pacman.update(collision);
+
+
+        this.updateGhosts();
+        this.ghost.update(false);
         
         this.updateGameMap();
 
@@ -356,9 +364,53 @@ class Scene extends THREE.Scene {
                 break;
         }
 
-        console.log(collided);
-
         return collided;
+    }
+
+    updateGhosts() {
+        var orientation = this.ghost.getOrientation();
+        var xGhost = Math.floor(this.ghost.position.x + 0.5);
+        var zGhost = Math.floor(this.ghost.position.z + 0.5);
+
+        var upCell = this.objectsMap[zGhost-1][xGhost];
+        var downCell = this.objectsMap[zGhost+1][xGhost];
+        var leftCell = this.objectsMap[zGhost][xGhost-1];
+        var rightCell = this.objectsMap[zGhost][xGhost+1];
+
+        if (this.directionCounter > 25) {
+
+            if (((orientation == orientations.LEFT || orientation == orientations.RIGHT) && (upCell != cellType.WALL || downCell != cellType.WALL)) ||
+                ((orientation == orientations.UP || orientation == orientations.DOWN) && (leftCell != cellType.WALL || rightCell != cellType.WALL))) {
+                var nextOrientations = [];
+                if (upCell != cellType.WALL && orientation != orientations.DOWN) {
+                    nextOrientations.push(orientations.UP);
+                }
+    
+                if (downCell != cellType.WALL && orientation != orientations.UP) {
+                    nextOrientations.push(orientations.DOWN);
+                }
+    
+                if (leftCell != cellType.WALL && orientation != orientations.RIGHT) {
+                    nextOrientations.push(orientations.LEFT);
+                }
+    
+                if (rightCell != cellType.WALL && orientation != orientations.LEFT) {
+                    nextOrientations.push(orientations.RIGHT);
+                }
+                var newOrientation = nextOrientations[Math.floor(Math.random() * nextOrientations.length)];
+                if (newOrientation != orientation) {
+                    this.ghost.setOrientation(newOrientation);
+        
+                    this.ghost.position.round();
+
+                }
+    
+                console.log(nextOrientations);
+    
+                this.directionCounter = 0;
+            }
+        }
+        
     }
 }
   
