@@ -10,6 +10,7 @@ class Ghost extends THREE.Object3D {
         // Establecer orientacion
         this.speed = 2;
         this.orientation = orientations.LEFT;
+        this.spawned = false;
 
         // Crear materiales
         var ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
@@ -90,27 +91,38 @@ class Ghost extends THREE.Object3D {
         return this.orientation;
     }
 
-    update(collided) {
+    setSpawned(spawned) {
+        this.spawned = spawned;
+    }
+
+    getSpawned() {
+        return this.spawned;
+    }
+
+    update() {
         // Obtener incremento en la distancia recorrida desde la ultima acutalizacion
         var currentTime = Date.now();
         var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         var distanceIncrement = this.speed * deltaTime;
 
-        this.updateOrientation();
+        if (this.spawned) {
 
-        switch(this.orientation) {
-            case orientations.UP:
-                this.position.z -= distanceIncrement;
-                break;
-            case orientations.DOWN:
-                this.position.z += distanceIncrement;
-                break;
-            case orientations.LEFT:
-                this.position.x -= distanceIncrement;
-                break;
-            case orientations.RIGHT:
-                this.position.x += distanceIncrement;
-                break;
+            this.updateOrientation();
+    
+            switch(this.orientation) {
+                case orientations.UP:
+                    this.position.z -= distanceIncrement;
+                    break;
+                case orientations.DOWN:
+                    this.position.z += distanceIncrement;
+                    break;
+                case orientations.LEFT:
+                    this.position.x -= distanceIncrement;
+                    break;
+                case orientations.RIGHT:
+                    this.position.x += distanceIncrement;
+                    break;
+            }
         }
 
         this.lastUpdateTime = currentTime;

@@ -19,7 +19,10 @@ class Scene extends THREE.Scene {
         this.score = 0;
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
-        this.directionCounter = 0;
+        this.ticksDirectionChange = [0, 0, 0, 0];
+        this.pacmanSpawnPoint = new THREE.Vector3(0, 0, 0);
+        this.ghostSpawnPoint = new THREE.Vector3(0, 0, 0);
+        this.ghosts = [];
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -41,13 +44,46 @@ class Scene extends THREE.Scene {
         this.pacman = new PacMan();
         this.add(this.pacman);
 
-        this.ghost = new Ghost(0x1AF2EF);
-        this.add(this.ghost);
+        this.ghosts.push(new Ghost(0xFF0000));
+        this.ghosts.push(new Ghost(0xFFA9E0));
+        this.ghosts.push(new Ghost(0x1AF2EF));
+        this.ghosts.push(new Ghost(0xFFBE29));
+
+        this.createMap();
+
+        this.ghosts.forEach((ghost) => {
+            ghost.position.set(this.ghostSpawnPoint.x, this.ghostSpawnPoint.y, this.ghostSpawnPoint.z);
+        });
+
 
         // Tendremos una cámara con un control de movimiento con el ratón
         this.createCamera ();
-        this.createMap();
+        
         document.getElementById('Score').textContent = this.score;
+
+        var init = {x: 0};
+        var end = {x: 1};
+        this.nextGhost = 0;
+
+        // Animacion que controla la aparicion inicial de los fantasmas
+        var spawnGhosts = new TWEEN.Tween(init)
+            .to(end, 3000)
+            .easing(TWEEN.Easing.Linear.None)
+            .onUpdate(() => {
+                if (init.x == end.x) {
+                    this.add(this.ghosts[this.nextGhost]);
+                    this.ghosts[this.nextGhost].setSpawned(true);
+                    let initOrientations = [orientations.LEFT, orientations.RIGHT];
+                    let initOrientation = initOrientations[Math.floor(Math.random() * initOrientations.length)];
+                    this.ghosts[this.nextGhost].setOrientation(initOrientation);
+                    this.nextGhost++;
+                }
+            })
+            .onComplete(() => {
+                console.log('All ghosts spawned!')
+            })
+            .repeat(3)
+            .start();
     }
     
     createCamera () {
@@ -70,10 +106,8 @@ class Scene extends THREE.Scene {
         var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000000});
 
         var ground = new THREE.Mesh(groundGeometry, groundMaterial);
-
         ground.position.y = -0.1;
-        
-        // Que no se nos olvide añadirlo a la escena, que en este caso es  this
+
         this.add (ground);
     }
     
@@ -172,6 +206,7 @@ class Scene extends THREE.Scene {
             "#..........................#",
             "############################"
         ];
+
         var that = this;
 
         stringMap.forEach(function(item, index) {
@@ -191,6 +226,7 @@ class Scene extends THREE.Scene {
                         break;
                     case cellType.PACMAN:
                         that.pacman.position.set(i, 0, zPos);
+                        that.pacmanSpawnPoint = that.pacman.position.clone();
                         break;
                     case cellType.SMALL_DOT:
                         let smallDotMesh = new Dot(0.1);
@@ -207,7 +243,8 @@ class Scene extends THREE.Scene {
                         that.remainingPoints++;
                         break;
                     case cellType.GHOST:
-                        that.ghost.position.set(i, 0, zPos);
+                        that.ghostSpawnPoint.x = i;
+                        that.ghostSpawnPoint.z = zPos;
                         break;
                 }
             }
@@ -272,7 +309,7 @@ class Scene extends THREE.Scene {
     }
   
     update() {
-        this.directionCounter++;
+        this.ticksDirectionChange = this.ticksDirectionChange.map(element => element + 1);
         // Este método debe ser llamado cada vez que queramos visualizar la escena de nuevo.
         
         // Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
@@ -288,14 +325,10 @@ class Scene extends THREE.Scene {
         
         // Se actualiza el resto del modelo
         
-        var collision = this.checkCollisionWithWall();
-        this.pacman.update(collision);
-
-
+        this.updatePacMan();
         this.updateGhosts();
-        this.ghost.update(false);
-        
-        this.updateGameMap();
+        this.updateDots();
+        this.checkCollisionWithGhosts();
 
         var pacmanPos = this.pacman.position.clone();
         pacmanPos.floor();
@@ -305,7 +338,19 @@ class Scene extends THREE.Scene {
             this.pacman.position.x = 0;
         } else if (pacmanPos.z == 14 && pacmanPos.x < -1) {
             this.pacman.position.x = this.objectsMap[0].length - 1;
-        }        
+        }
+        
+        this.ghosts.forEach((ghost) => {
+
+            var ghostPos = ghost.position.clone();
+            ghostPos.floor();
+    
+            if (ghostPos.z == 14 && ghostPos.x > this.objectsMap[0].length - 1) {
+                ghost.position.x = 0;
+            } else if (ghostPos.z == 14 && ghostPos.x < -1) {
+                ghost.position.x = this.objectsMap[0].length - 1;
+            }
+        });
 
         // Actualizar camara
         this.updateCamara();        
@@ -313,6 +358,8 @@ class Scene extends THREE.Scene {
         // Le decimos al renderizador "visualiza la escena que te indico usando la cámara que te estoy pasando"
         this.renderer.render (this, this.getCamera());
         document.getElementById('Score').textContent = this.score;
+
+        TWEEN.update();
     }
 
     updateCamara() {
@@ -320,11 +367,9 @@ class Scene extends THREE.Scene {
         this.camera.lookAt(this.pacman.position);
     }
 
-    updateGameMap() {
+    updateDots() {
         var xPos = Math.floor(this.pacman.position.x + 0.5);
         var zPos = Math.floor(this.pacman.position.z + 0.5);
-
-        //console.log(xPos, zPos);
 
         var selectedSmallDot = this.getObjectByName("smallDot_" + xPos + "_" + zPos);
         var selectedBigDot = this.getObjectByName("bigDot_" + xPos + "_" + zPos);
@@ -346,8 +391,8 @@ class Scene extends THREE.Scene {
     checkCollisionWithWall() {
         var collided = false;
 
-        var xPos = Math.round(this.pacman.position.x - 0.5);
-        var zPos = Math.round(this.pacman.position.z - 0.5);
+        var xPos = Math.floor(this.pacman.position.x);
+        var zPos = Math.floor(this.pacman.position.z);
 
         switch(this.pacman.getOrientation()) {
             case orientations.UP:
@@ -367,18 +412,21 @@ class Scene extends THREE.Scene {
         return collided;
     }
 
-    updateGhosts() {
-        var orientation = this.ghost.getOrientation();
-        var xGhost = Math.floor(this.ghost.position.x + 0.5);
-        var zGhost = Math.floor(this.ghost.position.z + 0.5);
+    ghostSelectNextDirection(ghost, index) {
+        var orientation = ghost.getOrientation();
+        var xGhost = Math.floor(ghost.position.x + 0.5);
+        var zGhost = Math.floor(ghost.position.z + 0.5);
 
         var upCell = this.objectsMap[zGhost-1][xGhost];
         var downCell = this.objectsMap[zGhost+1][xGhost];
         var leftCell = this.objectsMap[zGhost][xGhost-1];
         var rightCell = this.objectsMap[zGhost][xGhost+1];
 
-        if (this.directionCounter > 25) {
-
+        // Tienen que haber pasado mas de 25 ticks desde la ultima actualizacion
+        // y el fantasma tiene que encontrarse en el mapa (no esta en las zonas
+        // donde puede transportarse de una punta a la otra)
+        if (this.ticksDirectionChange[index] > 25 && xGhost >= 0 && xGhost <= this.objectsMap[0].length - 1) {
+            // Comprobar si tienen casillas en la direccion perpendicular a la suya
             if (((orientation == orientations.LEFT || orientation == orientations.RIGHT) && (upCell != cellType.WALL || downCell != cellType.WALL)) ||
                 ((orientation == orientations.UP || orientation == orientations.DOWN) && (leftCell != cellType.WALL || rightCell != cellType.WALL))) {
                 var nextOrientations = [];
@@ -397,20 +445,49 @@ class Scene extends THREE.Scene {
                 if (rightCell != cellType.WALL && orientation != orientations.LEFT) {
                     nextOrientations.push(orientations.RIGHT);
                 }
-                var newOrientation = nextOrientations[Math.floor(Math.random() * nextOrientations.length)];
-                if (newOrientation != orientation) {
-                    this.ghost.setOrientation(newOrientation);
-        
-                    this.ghost.position.round();
 
+                var newOrientation = nextOrientations[Math.floor(Math.random() * nextOrientations.length)];
+
+                if (newOrientation != orientation) {
+                    ghost.setOrientation(newOrientation);
+                    ghost.position.round();
                 }
     
-                console.log(nextOrientations);
-    
-                this.directionCounter = 0;
+                this.ticksDirectionChange[index] = 0;
             }
         }
-        
+    }
+
+    updateGhosts() {
+        var that = this;
+        this.ghosts.forEach(function(ghost, index) {
+            that.ghostSelectNextDirection(ghost, index);
+            ghost.update();
+        });
+    }
+
+    updatePacMan() {
+        var collision = this.checkCollisionWithWall();
+        this.pacman.update(collision);
+    }
+
+    checkCollisionWithGhosts() {
+        var collided = false;
+        var xPacMan = Math.floor(this.pacman.position.x + 0.5);
+        var zPacMan = Math.floor(this.pacman.position.z + 0.5);
+
+        this.ghosts.filter(ghost => ghost.getSpawned()).forEach(function(ghost) {
+            var xGhost = Math.floor(ghost.position.x + 0.5);
+            var zGhost = Math.floor(ghost.position.z + 0.5);
+
+            if (!collided) {
+                collided = xPacMan == xGhost && zPacMan == zGhost;
+            }
+        });
+
+        console.log(collided);
+
+        return collided;
     }
 }
   

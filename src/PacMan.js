@@ -6,8 +6,8 @@ class PacMan extends THREE.Object3D {
         super();
 
         // Establecer orientacion
-        this.orientation = orientations.DOWN;
-        this.speed = 4;
+        this.orientation = orientations.LEFT;
+        this.speed = 2;
         this.lastUpdateTime = Date.now();
         this.animationPaused = false;
 
