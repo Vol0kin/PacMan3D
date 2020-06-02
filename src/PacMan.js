@@ -2,8 +2,8 @@
  * Clase que representa al PacMan.
  */
 class PacMan extends Character3D {
-    constructor() {
-        super(2, orientations.LEFT);
+    constructor(speed) {
+        super(speed, orientations.LEFT);
 
         // Establecer orientacion
         this.animationPaused = false;

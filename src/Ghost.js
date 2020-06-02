@@ -2,8 +2,8 @@
  * Clase que representa un fantasma
  */
 class Ghost extends Character3D {
-    constructor(ghostColor) {
-        super(2, orientations.LEFT);
+    constructor(speed, ghostColor) {
+        super(speed, orientations.LEFT);
         this.spawned = false;
         this.edible = false;
         this.ticksChange = 0;
@@ -69,7 +69,7 @@ class Ghost extends Character3D {
         var init = {x: 0};
         var end = {x: 1};
         this.ediblePeriod = new TWEEN.Tween(init)
-            .to(end, 7000)
+            .to(end, 8000)
             .onUpdate(() => {
                 if (init.x > 0.7) {
                     this.ticksChange++;

@@ -26,6 +26,9 @@ class Scene extends THREE.Scene {
         this.ghostSpawnPoint = new THREE.Vector3(0, 0, 0);
         this.ghosts = [];
         this.eatenGhosts = 0;
+
+        this.ghostSpeed = 2.5;
+        this.pacmanSpeed = 3;
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -44,13 +47,13 @@ class Scene extends THREE.Scene {
         this.axis = new THREE.AxesHelper (5);
         this.add (this.axis);
         
-        this.pacman = new PacMan();
+        this.pacman = new PacMan(this.pacmanSpeed);
         this.add(this.pacman);
 
-        this.ghosts.push(new Ghost(0xFF0000));
-        this.ghosts.push(new Ghost(0xFFA9E0));
-        this.ghosts.push(new Ghost(0x1AF2EF));
-        this.ghosts.push(new Ghost(0xFFBE29));
+        this.ghosts.push(new Ghost(this.ghostSpeed, 0xFF0000));
+        this.ghosts.push(new Ghost(this.ghostSpeed, 0xFFA9E0));
+        this.ghosts.push(new Ghost(this.ghostSpeed, 0x1AF2EF));
+        this.ghosts.push(new Ghost(this.ghostSpeed, 0xFFBE29));
 
         this.createMap();
 
@@ -75,10 +78,7 @@ class Scene extends THREE.Scene {
             .onUpdate(() => {
                 if (init.x == end.x) {
                     this.add(this.ghosts[this.nextGhost]);
-                    this.ghosts[this.nextGhost].setSpawned(true);
-                    let initOrientations = [orientations.LEFT, orientations.RIGHT];
-                    let initOrientation = initOrientations[Math.floor(Math.random() * initOrientations.length)];
-                    this.ghosts[this.nextGhost].setOrientation(initOrientation);
+                    this._spawnGhost(this.ghosts[this.nextGhost]);
                     this.nextGhost++;
                 }
             })
@@ -89,15 +89,69 @@ class Scene extends THREE.Scene {
         this.startGhostSpawn();
     }
 
+    _loadSmallDot(x, z) {
+        var smallDotMesh = new Dot(0.1);
+        smallDotMesh.position.set(x, 0, z);
+        smallDotMesh.name = "smallDot_" + x + "_" + z;
+        this.add(smallDotMesh);
+        this.remainingPoints++;
+    }
+
+    _loadBigDot(x, z) {
+        var bigDotMesh = new Dot(0.2);
+        bigDotMesh.position.set(x, 0, z);
+        bigDotMesh.name = "bigDot_" + x + "_" + z;
+        this.add(bigDotMesh);
+        this.remainingPoints++;
+    }
+
+    loadNextStage() {
+        // Volver a pner los puntos en el mapa
+        for (let z = 0; z < this.objectsMap.length; z++) {
+            for (let x = 0; x < this.objectsMap[z].length; x++) {
+                var mesh = this.objectsMap[z][x];
+                switch(mesh) {
+                    case cellType.SMALL_DOT:
+                        this._loadSmallDot(x, z);
+                        break;
+                    case cellType.BIG_DOT:
+                        this._loadBigDot(x, z);
+                        break;
+                }
+            }
+        }
+
+        if (this.pacmanSpeed < 5.5) {
+            this.pacmanSpeed += 0.5;
+        }
+
+        if (this.ghostSpeed < 5.0) {
+            this.ghostSpeed += 0.5;
+        }
+
+        // Resetear PacMan y fantasmas
+        this.respawnPacMan();
+        this.respawnGhosts();
+    }
+
     startGhostSpawn() {
         this.spawnGhosts.repeat(3).start();
+    }
+
+    _spawnGhost(ghost) {
+        ghost.setSpawned(true);
+        ghost.setSpeed(this.ghostSpeed);
+        var possibleOrientations = [orientations.LEFT, orientations.RIGHT];
+        var initOrientation = possibleOrientations[Math.floor(Math.random() * possibleOrientations.length)];
+        ghost.setOrientation(initOrientation);
     }
 
     respawnGhosts() {
         this.ghosts.forEach((ghost) => {
             this.remove(ghost)
-            ghost.position.set(this.ghostSpawnPoint.x, 0, this.ghostSpawnPoint.z)
+            ghost.position.set(this.ghostSpawnPoint.x, this.ghostSpawnPoint.y, this.ghostSpawnPoint.z);
             ghost.setSpawned(false);
+            ghost.setEdible(false);
         });
         this.nextGhost = 0;
         this.spawnGhosts.stop();
@@ -107,14 +161,12 @@ class Scene extends THREE.Scene {
     respawnSingleGhost(ghost) {
         ghost.setEdible(false);
         ghost.position.set(this.ghostSpawnPoint.x, this.ghostSpawnPoint.y, this.ghostSpawnPoint.z);
-        let initOrientations = [orientations.LEFT, orientations.RIGHT];
-        let initOrientation = initOrientations[Math.floor(Math.random() * initOrientations.length)];
-        ghost.setOrientation(initOrientation);
+        this._spawnGhost(ghost);
     }
 
     respawnPacMan() {
         this.remove(this.pacman);
-        this.pacman = new PacMan();
+        this.pacman = new PacMan(this.pacmanSpeed);
         this.add(this.pacman);
         this.pacman.position.set(this.pacmanSpawnPoint.x, this.pacmanSpawnPoint.y, this.pacmanSpawnPoint.z);
     }
@@ -247,42 +299,32 @@ class Scene extends THREE.Scene {
 
         var that = this;
 
-        stringMap.forEach(function(item, index) {
+        stringMap.forEach(function(item, z) {
             let row = [];
 
-            for (let i = 0; i < item.length; i++) {
-                var meshType = that.correspondence[item.charAt(i)];
+            for (let x = 0; x < item.length; x++) {
+                let meshType = that.correspondence[item.charAt(x)];
                 row.push(meshType);
-
-                let zPos = index;
 
                 switch(meshType) {
                     case cellType.WALL:
                         let wallMesh = new Wall();
-                        wallMesh.position.set(i, 0, zPos);
+                        wallMesh.position.set(x, 0, z);
                         that.add(wallMesh);
                         break;
                     case cellType.PACMAN:
-                        that.pacman.position.set(i, 0, zPos);
+                        that.pacman.position.set(x, 0, z);
                         that.pacmanSpawnPoint = that.pacman.position.clone();
                         break;
                     case cellType.SMALL_DOT:
-                        let smallDotMesh = new Dot(0.1);
-                        smallDotMesh.position.set(i, 0, zPos);
-                        smallDotMesh.name = "smallDot_" + i + "_" + zPos;
-                        that.add(smallDotMesh);
-                        that.remainingPoints++;
+                        that._loadSmallDot(x, z);
                         break;
                     case cellType.BIG_DOT:
-                        let bigDotMesh = new Dot(0.2);
-                        bigDotMesh.position.set(i, 0, zPos);
-                        bigDotMesh.name = "bigDot_" + i + "_" + zPos;
-                        that.add(bigDotMesh);
-                        that.remainingPoints++;
+                        that._loadBigDot(x, z);
                         break;
                     case cellType.GHOST:
-                        that.ghostSpawnPoint.x = i;
-                        that.ghostSpawnPoint.z = zPos;
+                        that.ghostSpawnPoint.x = x;
+                        that.ghostSpawnPoint.z = z;
                         break;
                 }
             }
@@ -366,26 +408,32 @@ class Scene extends THREE.Scene {
         this.updatePacMan();
         this.updateGhosts();
         this.updateDots();
-        var collidedGhost = this.checkCollisionWithGhosts();
-        var collidedWithGhost = collidedGhost != undefined;
 
-        if (collidedWithGhost) {
-            if (collidedGhost.getEdible()) {
-                this.eatenGhosts++;
-                console.log(this.eatenGhosts);
-                this.score += Math.pow(2, this.eatenGhosts) * this.GHOST_POINTS;
-                this.respawnSingleGhost(collidedGhost);
-            } else {
-                this.pacmanLives--;
-                if (this.pacmanLives > 0) {
-                    this.resetCharacters();
+        if (this.remainingPoints > 0) {
+            var collidedGhost = this.checkCollisionWithGhosts();
+            var collidedWithGhost = collidedGhost != undefined;
+    
+            if (collidedWithGhost) {
+                if (collidedGhost.getEdible()) {
+                    this.eatenGhosts++;
+                    this.score += Math.pow(2, this.eatenGhosts) * this.GHOST_POINTS;
+                    this.respawnSingleGhost(collidedGhost);
                 } else {
-                    window.alert("Has perdido :c. Pulsa F5 para jugar de nuevo!");
+                    this.pacmanLives--;
+                    if (this.pacmanLives > 0) {
+                        this.resetCharacters();
+                    } else {
+                        window.alert("Has perdido :c. Pulsa F5 para jugar de nuevo!");
+                    }
                 }
+            } else {
+                this.checkTeleportCharacter(this.pacman);
+                this.ghosts.forEach(ghost => this.checkTeleportCharacter(ghost));
             }
+
         } else {
-            this.checkTeleportCharacter(this.pacman);
-            this.ghosts.forEach(ghost => this.checkTeleportCharacter(ghost));
+            window.alert("Stage cleared! Starting new stage...")
+            this.loadNextStage();
         }
 
         if (this.pacmanLives > 0) {
@@ -543,8 +591,6 @@ class Scene extends THREE.Scene {
                 }
             }
         });
-
-        console.log(collided);
 
         return collidedGhost;
     }
