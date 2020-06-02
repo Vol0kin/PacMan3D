@@ -19,11 +19,13 @@ class Scene extends THREE.Scene {
         this.score = 0;
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
+        this.GHOST_POINTS = 100;
         this.pacmanLives = 3;
         this.ticksDirectionChange = [0, 0, 0, 0];
         this.pacmanSpawnPoint = new THREE.Vector3(0, 0, 0);
         this.ghostSpawnPoint = new THREE.Vector3(0, 0, 0);
         this.ghosts = [];
+        this.eatenGhosts = 0;
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -100,6 +102,14 @@ class Scene extends THREE.Scene {
         this.nextGhost = 0;
         this.spawnGhosts.stop();
         this.startGhostSpawn();        
+    }
+
+    respawnSingleGhost(ghost) {
+        ghost.setEdible(false);
+        ghost.position.set(this.ghostSpawnPoint.x, this.ghostSpawnPoint.y, this.ghostSpawnPoint.z);
+        let initOrientations = [orientations.LEFT, orientations.RIGHT];
+        let initOrientation = initOrientations[Math.floor(Math.random() * initOrientations.length)];
+        ghost.setOrientation(initOrientation);
     }
 
     respawnPacMan() {
@@ -356,14 +366,22 @@ class Scene extends THREE.Scene {
         this.updatePacMan();
         this.updateGhosts();
         this.updateDots();
-        var collisionGhost = this.checkCollisionWithGhosts();
+        var collidedGhost = this.checkCollisionWithGhosts();
+        var collidedWithGhost = collidedGhost != undefined;
 
-        if (collisionGhost) {
-            this.pacmanLives--;
-            if (this.pacmanLives > 0) {
-                this.resetCharacters();
+        if (collidedWithGhost) {
+            if (collidedGhost.getEdible()) {
+                this.eatenGhosts++;
+                console.log(this.eatenGhosts);
+                this.score += Math.pow(2, this.eatenGhosts) * this.GHOST_POINTS;
+                this.respawnSingleGhost(collidedGhost);
             } else {
-                window.alert("Has perdido :c. Pulsa F5 para jugar de nuevo!");
+                this.pacmanLives--;
+                if (this.pacmanLives > 0) {
+                    this.resetCharacters();
+                } else {
+                    window.alert("Has perdido :c. Pulsa F5 para jugar de nuevo!");
+                }
             }
         } else {
             this.checkTeleportCharacter(this.pacman);
@@ -416,6 +434,8 @@ class Scene extends THREE.Scene {
         if (selectedBigDot != undefined) {
             this.remainingPoints--;
             this.score += this.BIG_DOT_POINTS;
+            this.ghosts.forEach(ghost => ghost.setEdible(true));
+            this.eatenGhosts = 0;
         }
 
         this.remove(selectedSmallDot);
@@ -507,6 +527,7 @@ class Scene extends THREE.Scene {
 
     checkCollisionWithGhosts() {
         var collided = false;
+        var collidedGhost = undefined;
         var xPacMan = Math.floor(this.pacman.position.x + 0.5);
         var zPacMan = Math.floor(this.pacman.position.z + 0.5);
 
@@ -516,12 +537,16 @@ class Scene extends THREE.Scene {
 
             if (!collided) {
                 collided = xPacMan == xGhost && zPacMan == zGhost;
+
+                if (collided) {
+                    collidedGhost = ghost;
+                }
             }
         });
 
         console.log(collided);
 
-        return collided;
+        return collidedGhost;
     }
 }
   

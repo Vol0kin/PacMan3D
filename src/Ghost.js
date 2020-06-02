@@ -5,9 +5,16 @@ class Ghost extends Character3D {
     constructor(ghostColor) {
         super(2, orientations.LEFT);
         this.spawned = false;
+        this.edible = false;
+        this.ticksChange = 0;
 
         // Crear materiales
-        var ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
+        this.ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
+        this.edibleMaterials = [
+            new THREE.MeshPhongMaterial({color: 0x05135A}),
+            new THREE.MeshPhongMaterial({color: 0xEEEEEE})
+        ];
+        this.nextEdibleMaterial = 0;
         var eyeMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
         var pupilMaterial = new THREE.MeshPhongMaterial({color: 0x0000ff});
 
@@ -16,16 +23,16 @@ class Ghost extends Character3D {
         var segments = 25;
         var head = new THREE.SphereBufferGeometry(radius, segments, segments, 0, Math.PI);
 
-        var headMesh = new THREE.Mesh(head, ghostMaterial);
+        this.headMesh = new THREE.Mesh(head, this.ghostMaterial);
 
-        headMesh.rotation.x = -Math.PI / 2;
-        headMesh.position.y += 0.5;
+        this.headMesh.rotation.x = -Math.PI / 2;
+        this.headMesh.position.y += 0.5;
 
         // Crear cuerpo
         var boydGeometry = new THREE.CylinderBufferGeometry(radius, radius, 0.52, segments)
-        var bodyMesh = new THREE.Mesh(boydGeometry, ghostMaterial);
+        this.bodyMesh = new THREE.Mesh(boydGeometry, this.ghostMaterial);
 
-        bodyMesh.position.y += 0.25;
+        this.bodyMesh.position.y += 0.25;
 
         // Crear ojos
         var eyeGeometry = new THREE.CylinderBufferGeometry(0.5, 0.5, 0.1, segments);
@@ -51,21 +58,63 @@ class Ghost extends Character3D {
 
         this.ghost = new THREE.Object3D();
         
-        this.ghost.add(headMesh);
-        this.ghost.add(bodyMesh);
+        this.ghost.add(this.headMesh);
+        this.ghost.add(this.bodyMesh);
         this.ghost.add(leftEyeMesh);
         this.ghost.add(rightEyeMesh);
         this.ghost.rotation.y = Math.PI/2;
 
         this.add(this.ghost);
-    }
 
+        var init = {x: 0};
+        var end = {x: 1};
+        this.ediblePeriod = new TWEEN.Tween(init)
+            .to(end, 7000)
+            .onUpdate(() => {
+                if (init.x > 0.7) {
+                    this.ticksChange++;
+
+                    if (this.ticksChange > 100) {
+                        this.ticksChange = 0;
+                        this.bodyMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+                        this.headMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+                        this.nextEdibleMaterial = (this.nextEdibleMaterial + 1) % this.edibleMaterials.length;
+                    }
+                }
+            })
+            .onComplete(() => {
+                this.edible = false;
+                this.headMesh.material = this.ghostMaterial;
+                this.bodyMesh.material = this.ghostMaterial;
+                console.log("Ghosts are no longer edible!");
+            });
+    }
+    
+    getSpawned() {
+        return this.spawned;
+    }
     setSpawned(spawned) {
         this.spawned = spawned;
     }
 
-    getSpawned() {
-        return this.spawned;
+    getEdible() {
+        return this.edible;
+    }
+
+    setEdible(edible) {
+        this.edible = edible;
+
+        if (this.edible) {
+            this.nextEdibleMaterial = 0;
+            this.headMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+            this.bodyMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+            this.nextEdibleMaterial++;
+            this.ediblePeriod.start();
+        } else {
+            this.ediblePeriod.stop();
+            this.headMesh.material = this.ghostMaterial;
+            this.bodyMesh.material = this.ghostMaterial;
+        }
     }
 
     update() {
@@ -93,6 +142,8 @@ class Ghost extends Character3D {
                     break;
             }
         }
+
+        TWEEN.update();
 
         this.lastUpdateTime = currentTime;
     }
