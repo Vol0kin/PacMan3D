@@ -58,7 +58,7 @@ class PacMan extends Character3D {
         var endMouthPosition = {alfa: Math.PI / 6};
         
         this.mouthAnimation = new TWEEN.Tween(initMouthPosition)
-            .to(endMouthPosition, 1000)
+            .to(endMouthPosition, 250)
             .easing(TWEEN.Easing.Linear.None)
             .onUpdate(() => {
                 upperMouthMesh.rotation.z = initMouthPosition.alfa;
@@ -68,8 +68,9 @@ class PacMan extends Character3D {
             .yoyo(true)
             .start();
         
-        this.audio = new Audio("audio/pacman_chomp.wav");
-        this.audio.volume = 0.6;
+        this.chomp = new Audio("audio/pacman_chomp.wav");
+        this.chomp.preload = "auto";
+        this.chomp.volume = 0.5;
     }
 
     update(collided) {
@@ -107,11 +108,11 @@ class PacMan extends Character3D {
                     break;
             }
 
-            this.audio.play();
+            this.chomp.play();
             
             TWEEN.update();
         } else {
-            this.audio.pause();
+            this.chomp.pause();
         }
 
         this.lastUpdateTime = currentTime;

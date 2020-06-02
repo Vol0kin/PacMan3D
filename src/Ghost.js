@@ -11,7 +11,7 @@ class Ghost extends Character3D {
         // Crear materiales
         this.ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
         this.edibleMaterials = [
-            new THREE.MeshPhongMaterial({color: 0x05135A}),
+            new THREE.MeshPhongMaterial({color: 0x0037C2}),
             new THREE.MeshPhongMaterial({color: 0xEEEEEE})
         ];
         this.nextEdibleMaterial = 0;
