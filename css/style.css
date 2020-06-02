@@ -1,0 +1,25 @@
+body{
+    margin: 0;
+    overflow: hidden;
+}
+img {
+    max-width: 100%;
+    max-height: 100%;
+    margin-right: 10px;
+}
+#lives{
+    background-color: transparent;
+    height: 50px;
+    width: 180px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+#Score{
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    font-size: xx-large;
+    font-family: 'Courier New', Courier, monospace;
+    color: yellow;
+}

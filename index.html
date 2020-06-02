@@ -2,8 +2,10 @@
 
 <html>
     <head>
-        <title>PacMan3D</title>
         <meta charset="utf-8">
+        <title>PacMan3D</title>
+        <link rel="icon" type="image/png" href="media/pacman_icon.png"/>
+        <link rel="stylesheet"  href="css/style.css">
         <script type="text/javascript" src="libs/three.js"></script>
         <script type="text/javascript" src="libs/jquery.js"></script>
         <script type="text/javascript" src="libs/dat.gui.js"></script>
@@ -17,16 +19,10 @@
         <script type="text/javascript" src="src/Scene.js"></script>
         <script type="text/javascript" src="src/PacMan.js"></script>
         <script type="text/javascript" src="src/Ghost.js"></script>
-        <style>
-            body{
-                margin: 0;
-                overflow: hidden;
-            }
-        </style>
     </head>
     <body>
-        <div id="WebGL-Output">
-            <div id="Score"></div>
-        </div>
+        <div id="lives"></div>
+        <div id="Score"></div>
+        <div id="WebGL-Output"></div>
     </body>
 </html>

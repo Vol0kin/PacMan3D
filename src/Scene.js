@@ -29,6 +29,14 @@ class Scene extends THREE.Scene {
 
         this.ghostSpeed = 2.5;
         this.pacmanSpeed = 3;
+
+        
+        for (let i = 0; i < this.pacmanLives; i++) {
+            let life = document.createElement("img");
+            life.src = "../media/pacman_icon.png";
+            document.getElementById("lives").appendChild(life);
+
+        }
         
         // Lo primero, crear el visualizador, pasándole el lienzo sobre el que realizar los renderizados.
         this.renderer = this.createRenderer(myCanvas);
@@ -387,6 +395,12 @@ class Scene extends THREE.Scene {
             this.pacman.position.round();
         }
     }
+
+    updateLives() {
+        this.pacmanLives--;
+        var divLives = document.getElementById("lives").getElementsByTagName('img');
+        divLives[this.pacmanLives].style.display = 'none';
+    }
   
     update() {
         this.ticksDirectionChange = this.ticksDirectionChange.map(element => element + 1);
@@ -419,7 +433,8 @@ class Scene extends THREE.Scene {
                     this.score += Math.pow(2, this.eatenGhosts) * this.GHOST_POINTS;
                     this.respawnSingleGhost(collidedGhost);
                 } else {
-                    this.pacmanLives--;
+                    this.updateLives();
+
                     if (this.pacmanLives > 0) {
                         this.resetCharacters();
                     } else {
