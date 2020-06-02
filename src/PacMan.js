@@ -67,6 +67,9 @@ class PacMan extends Character3D {
             .repeat(Infinity)
             .yoyo(true)
             .start();
+        
+        this.audio = new Audio("../media/pacman_chomp.wav");
+        this.audio.volume = 0.6;
     }
 
     update(collided) {
@@ -103,8 +106,12 @@ class PacMan extends Character3D {
                     this.position.x += distanceIncrement;
                     break;
             }
+
+            this.audio.play();
             
             TWEEN.update();
+        } else {
+            this.audio.pause();
         }
 
         this.lastUpdateTime = currentTime;

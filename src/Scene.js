@@ -5,7 +5,7 @@ class Scene extends THREE.Scene {
     constructor (myCanvas) {
         super();
 
-        this.collision = false;
+        //window.alert("Welcome to PacMan3D");
         this.objectsMap = [];
         this.correspondence = {
             '#': cellType.WALL,
@@ -15,6 +15,7 @@ class Scene extends THREE.Scene {
             'P': cellType.PACMAN,
             'G': cellType.GHOST 
         }
+        this.canMove = false;
         this.remainingPoints = 0;
         this.score = 0;
         this.SMALL_DOT_POINTS = 10;
@@ -33,7 +34,7 @@ class Scene extends THREE.Scene {
         
         for (let i = 0; i < this.pacmanLives; i++) {
             let life = document.createElement("img");
-            life.src = "../media/pacman_icon.png";
+            life.src = "../img/pacman_icon.png";
             document.getElementById("lives").appendChild(life);
 
         }
@@ -77,7 +78,14 @@ class Scene extends THREE.Scene {
 
         var init = {x: 0};
         var end = {x: 1};
-        this.nextGhost = 0;
+        this.nextGhost = 0;          
+        
+        window.alert("hola")
+
+        var beginningAudio = new Audio("../media/pacman_beginning.wav");
+        beginningAudio.autoplay = true;
+        beginningAudio.preload = 'auto';
+        beginningAudio.play();
 
         // Animacion que controla la aparicion inicial de los fantasmas
         this.spawnGhosts = new TWEEN.Tween(init)
@@ -94,7 +102,14 @@ class Scene extends THREE.Scene {
                 console.log('All ghosts spawned!')
             });
         
-        this.startGhostSpawn();
+        var init2 = {x: 0};
+        var wait = new TWEEN.Tween(init2)
+            .to(end, 4500)
+            .easing(TWEEN.Easing.Linear.None)
+            .onComplete(() =>{
+                this.canMove = true;
+                this.startGhostSpawn();
+            }).start();
     }
 
     _loadSmallDot(x, z) {
@@ -585,7 +600,10 @@ class Scene extends THREE.Scene {
 
     updatePacMan() {
         var collision = this.checkCollisionWithWall();
-        this.pacman.update(collision);
+        if (this.canMove) {
+            this.pacman.update(collision);
+
+        } else {this.pacman.update(true)};
     }
 
     checkCollisionWithGhosts() {
