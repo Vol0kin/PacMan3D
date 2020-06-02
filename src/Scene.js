@@ -34,7 +34,7 @@ class Scene extends THREE.Scene {
         
         for (let i = 0; i < this.pacmanLives; i++) {
             let life = document.createElement("img");
-            life.src = "../img/pacman_icon.png";
+            life.src = "img/pacman_icon.png";
             document.getElementById("lives").appendChild(life);
 
         }
@@ -82,7 +82,7 @@ class Scene extends THREE.Scene {
         
         window.alert("hola")
 
-        var beginningAudio = new Audio("../media/pacman_beginning.wav");
+        var beginningAudio = new Audio("audio/pacman_beginning.wav");
         beginningAudio.autoplay = true;
         beginningAudio.preload = 'auto';
         beginningAudio.play();

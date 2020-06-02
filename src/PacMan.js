@@ -68,7 +68,7 @@ class PacMan extends Character3D {
             .yoyo(true)
             .start();
         
-        this.audio = new Audio("../media/pacman_chomp.wav");
+        this.audio = new Audio("audio/pacman_chomp.wav");
         this.audio.volume = 0.6;
     }
 
