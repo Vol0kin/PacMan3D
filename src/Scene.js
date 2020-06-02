@@ -19,6 +19,7 @@ class Scene extends THREE.Scene {
         this.score = 0;
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
+        this.pacmanLives = 3;
         this.ticksDirectionChange = [0, 0, 0, 0];
         this.pacmanSpawnPoint = new THREE.Vector3(0, 0, 0);
         this.ghostSpawnPoint = new THREE.Vector3(0, 0, 0);
@@ -66,7 +67,7 @@ class Scene extends THREE.Scene {
         this.nextGhost = 0;
 
         // Animacion que controla la aparicion inicial de los fantasmas
-        var spawnGhosts = new TWEEN.Tween(init)
+        this.spawnGhosts = new TWEEN.Tween(init)
             .to(end, 3000)
             .easing(TWEEN.Easing.Linear.None)
             .onUpdate(() => {
@@ -81,9 +82,36 @@ class Scene extends THREE.Scene {
             })
             .onComplete(() => {
                 console.log('All ghosts spawned!')
-            })
-            .repeat(3)
-            .start();
+            });
+        
+        this.startGhostSpawn();
+    }
+
+    startGhostSpawn() {
+        this.spawnGhosts.repeat(3).start();
+    }
+
+    respawnGhosts() {
+        this.ghosts.forEach((ghost) => {
+            this.remove(ghost)
+            ghost.position.set(this.ghostSpawnPoint.x, 0, this.ghostSpawnPoint.z)
+            ghost.setSpawned(false);
+        });
+        this.nextGhost = 0;
+        this.spawnGhosts.stop();
+        this.startGhostSpawn();        
+    }
+
+    respawnPacMan() {
+        this.remove(this.pacman);
+        this.pacman = new PacMan();
+        this.add(this.pacman);
+        this.pacman.position.set(this.pacmanSpawnPoint.x, this.pacmanSpawnPoint.y, this.pacmanSpawnPoint.z);
+    }
+
+    resetCharacters() {
+        this.respawnPacMan();
+        this.respawnGhosts();
     }
     
     createCamera () {
@@ -314,7 +342,7 @@ class Scene extends THREE.Scene {
         
         // Literalmente le decimos al navegador: "La próxima vez que haya que refrescar la pantalla, llama al método que te indico".
         // Si no existiera esta línea,  update()  se ejecutaría solo la primera vez.
-        requestAnimationFrame(() => this.update())
+        
     
         // Se actualizan los elementos de la escena para cada frame
         // Se actualiza la intensidad de la luz con lo que haya indicado el usuario en la gui
@@ -328,29 +356,23 @@ class Scene extends THREE.Scene {
         this.updatePacMan();
         this.updateGhosts();
         this.updateDots();
-        this.checkCollisionWithGhosts();
+        var collisionGhost = this.checkCollisionWithGhosts();
 
-        var pacmanPos = this.pacman.position.clone();
-        pacmanPos.floor();
-
-        // Pasar de un lado del mapa al otro
-        if (pacmanPos.z == 14 && pacmanPos.x > this.objectsMap[0].length - 1) {
-            this.pacman.position.x = 0;
-        } else if (pacmanPos.z == 14 && pacmanPos.x < -1) {
-            this.pacman.position.x = this.objectsMap[0].length - 1;
-        }
-        
-        this.ghosts.forEach((ghost) => {
-
-            var ghostPos = ghost.position.clone();
-            ghostPos.floor();
-    
-            if (ghostPos.z == 14 && ghostPos.x > this.objectsMap[0].length - 1) {
-                ghost.position.x = 0;
-            } else if (ghostPos.z == 14 && ghostPos.x < -1) {
-                ghost.position.x = this.objectsMap[0].length - 1;
+        if (collisionGhost) {
+            this.pacmanLives--;
+            if (this.pacmanLives > 0) {
+                this.resetCharacters();
+            } else {
+                window.alert("Has perdido :c. Pulsa F5 para jugar de nuevo!");
             }
-        });
+        } else {
+            this.checkTeleportCharacter(this.pacman);
+            this.ghosts.forEach(ghost => this.checkTeleportCharacter(ghost));
+        }
+
+        if (this.pacmanLives > 0) {
+            requestAnimationFrame(() => this.update());
+        }
 
         // Actualizar camara
         this.updateCamara();        
@@ -360,6 +382,18 @@ class Scene extends THREE.Scene {
         document.getElementById('Score').textContent = this.score;
 
         TWEEN.update();
+    }
+
+    checkTeleportCharacter(character) {
+        var position = character.position.clone();
+        position.floor();
+
+        // Pasar de un lado del mapa al otro
+        if (position.z == 14 && position.x > this.objectsMap[0].length - 1) {
+            character.position.x = 0;
+        } else if (position.z == 14 && position.x < -1) {
+            character.position.x = this.objectsMap[0].length - 1;
+        }
     }
 
     updateCamara() {
