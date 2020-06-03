@@ -1,24 +1,47 @@
 /**
- * Clase que representa un fantasma
+ * Clase que representa un fantasma.
  */
 class Ghost extends Character3D {
+    /**
+     * Constructor de la clase. Crea un nuevo fantasma de un determinado color
+     * junto con la animacion de cuando es comestible.
+     * @param {number} speed Velocidad a la que se mueve el personaje.
+     * @param {number} ghostColor Numero hexadecimal que representa el color base
+     * del fantasma.
+     */
     constructor(speed, ghostColor) {
         super(speed, orientations.LEFT);
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Establecer atributos
+
+        // Indica si el fantasma ha spawneado
         this.spawned = false;
+
+        // Indica si el fantasma es comestible o no
         this.edible = false;
+
+        // Este atributo se utiliza en la animacino de cuando es comestible para
+        // crear el efeto de intermitencia entre dos materiales
+        // Cuenta el numero de llamadas que se han producido al metodo de acualizar
+        // la animacion a partir de cierto momento
         this.ticksChange = 0;
 
-        // Crear materiales
+        // Materiales base y del estado comestible del fantasma
         this.ghostMaterial = new THREE.MeshPhongMaterial({color: ghostColor});
         this.edibleMaterials = [
             new THREE.MeshPhongMaterial({color: 0x0037C2}),
             new THREE.MeshPhongMaterial({color: 0xEEEEEE})
         ];
+
+        // Siguiente material que tendra el fantasma durante el estado de comestible
         this.nextEdibleMaterial = 0;
+
+        // Materiales de los ojos
         var eyeMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
         var pupilMaterial = new THREE.MeshPhongMaterial({color: 0x0000ff});
 
-        // Crear cabeza del fantasma
+        // Crear cabeza del fantasma y posicionarla
         var radius = 0.5;
         var segments = 25;
         var head = new THREE.SphereBufferGeometry(radius, segments, segments, 0, Math.PI);
@@ -28,13 +51,13 @@ class Ghost extends Character3D {
         this.headMesh.rotation.x = -Math.PI / 2;
         this.headMesh.position.y += 0.5;
 
-        // Crear cuerpo
+        // Crear cuerpo y posicionarlo
         var boydGeometry = new THREE.CylinderBufferGeometry(radius, radius, 0.52, segments)
         this.bodyMesh = new THREE.Mesh(boydGeometry, this.ghostMaterial);
 
         this.bodyMesh.position.y += 0.25;
 
-        // Crear ojos
+        // Crear ojos y posicionarlos
         var eyeGeometry = new THREE.CylinderBufferGeometry(0.5, 0.5, 0.1, segments);
 
         eyeGeometry.scale(0.15, 0.5, 0.4);
@@ -56,6 +79,7 @@ class Ghost extends Character3D {
         var rightEyeMesh = leftEyeMesh.clone();
         rightEyeMesh.position.x += 0.3;
 
+        // Nodo que representa al fantasma
         this.ghost = new THREE.Object3D();
         
         this.ghost.add(this.headMesh);
@@ -66,27 +90,37 @@ class Ghost extends Character3D {
 
         this.add(this.ghost);
 
+        // Animacion que se lanza cuando el fantasma es comestible
+        // Tiene una duaracion de 8 segundos
         var init = {x: 0};
         var end = {x: 1};
+
         this.ediblePeriod = new TWEEN.Tween(init)
             .to(end, 8000)
             .onUpdate(() => {
+                // Cuando haya pasado el 70% del tiempo en el que el fantasma
+                // es comestible, cada 100 ticks (llamadas a este metodo) se
+                // cambia el color del fantasma, dando una sensacion de intermitencia
                 if (init.x > 0.7) {
                     this.ticksChange++;
 
                     if (this.ticksChange > 100) {
                         this.ticksChange = 0;
+
                         this.bodyMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
                         this.headMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+
                         this.nextEdibleMaterial = (this.nextEdibleMaterial + 1) % this.edibleMaterials.length;
                     }
                 }
             })
             .onComplete(() => {
+                // Indicar que el fantasma ya no es comestible y restaurar
+                // material base
                 this.edible = false;
-                this.headMesh.material = this.ghostMaterial;
-                this.bodyMesh.material = this.ghostMaterial;
-                console.log("Ghosts are no longer edible!");
+                this._restoreBaseMaterial();
+
+                console.log("Ghost is no longer edible!");
             });
     }
     
@@ -101,32 +135,57 @@ class Ghost extends Character3D {
         return this.edible;
     }
 
+    /**
+     * Metodo que establece si el fantasma es comestible o no e inicia o detiene
+     * la animacion en funcion del valor de entrada.
+     * @param {boolean} edible Booleano que indica si el fantasma es comestible
+     * o no.
+     */
     setEdible(edible) {
         this.edible = edible;
 
         if (this.edible) {
+            // Iniciar animacion con el primer material de la lista
             this.nextEdibleMaterial = 0;
+            this.ticksChange = 0;
+
             this.headMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
             this.bodyMesh.material = this.edibleMaterials[this.nextEdibleMaterial];
+
             this.nextEdibleMaterial++;
+
             this.ediblePeriod.start();
         } else {
+            // Detener animacion y restaurar material base
             this.ediblePeriod.stop();
-            this.headMesh.material = this.ghostMaterial;
-            this.bodyMesh.material = this.ghostMaterial;
+            this._restoreBaseMaterial();    
         }
     }
 
+    /**
+     * Metodo que permite restaurar el material base del fantasma.
+     */
+    _restoreBaseMaterial() {
+        this.headMesh.material = this.ghostMaterial;
+        this.bodyMesh.material = this.ghostMaterial;
+    }
+
+    /**
+     * Metodo que actualiza el estado del fantasma (posicion y animacion de
+     * cuando es comestible)
+     */
     update() {
         // Obtener incremento en la distancia recorrida desde la ultima acutalizacion
         var currentTime = Date.now();
         var deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         var distanceIncrement = this.speed * deltaTime;
 
+        // Si el fantasma ha spawneado, actualizar posicion
         if (this.spawned) {
-
+            // Rotar personaje de acuerdo a su orientacion
             this.updateOrientation();
     
+            // Actualizar orientacion
             switch(this.orientation) {
                 case orientations.UP:
                     this.position.z -= distanceIncrement;

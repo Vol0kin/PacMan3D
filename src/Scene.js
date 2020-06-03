@@ -209,23 +209,26 @@ class Scene extends THREE.Scene {
     }
     
     createCamera () {
-        // Para crear una cámara le indicamos
-        //   El ángulo del campo de visión en grados sexagesimales
-        //   La razón de aspecto ancho/alto
-        //   Los planos de recorte cercano y lejano
+        // Crear camara en perspectiva que seguira al PacMan
+        // Posicionarla, indicar hacia donde mira e insertarla en la escena
         this.camera1 = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        this.camera1.position.set(this.pacman.position.x, 10, this.pacman.position.z + 10);
+        this.camera1.lookAt(this.pacman.position);
         this.add(this.camera1);
 
-        // Posicionar camara
-        this.camera1.position.set (this.pacman.position.x, 10, this.pacman.position.z + 10);
-        
-        // Indicar hacia donde mira la camara
-        this.camera1.lookAt(this.pacman.position);
+        // Obtener tamaños de las vistas en los ejes X, Y
+        var viewSizeX = this.objectsMap[0].length;
+        var viewSizeY = this.objectsMap.length; 
 
-        this.camera2 = new THREE.OrthographicCamera((-this.objectsMap[0].length)/2, (this.objectsMap[0].length)/2, this.objectsMap.length/2, -this.objectsMap.length/2, 1, 1000);
-        this.add(this.camera2);
+        // Crear camara ortogonal, posicionarla correctamente para que mire hacia abajo
+        // e insertarla en la escena
+        this.camera2 = new THREE.OrthographicCamera(-viewSizeX / 2, viewSizeX / 2,
+            viewSizeY / 2, - viewSizeY / 2, 1, 1000);
+        
         this.camera2.position.set(13.5, 2, 15);
         this.camera2.lookAt(13.5, 0, 15);
+        this.add(this.camera2);
     }
     
     createGround () {

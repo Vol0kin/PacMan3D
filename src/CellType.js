@@ -1,3 +1,6 @@
+/**
+ * Enumerado que representa el tipo de celda del mapa.
+ */
 const cellType = {
     EMPTY: 'empty',
     GHOST: 'ghost',
