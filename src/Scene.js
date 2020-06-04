@@ -761,7 +761,7 @@ class Scene extends THREE.Scene {
                     if (this.game.getRemainingLives() > 0) {
                         this.resetCharacters();
                     } else {
-                        window.alert("You lost :c. Press F5  to play again!");
+                        window.alert("You lost :c. Total score: " + this.game.getScore() + " points.\nPress F5  to play again!");
                     }
                 }
             } else {
