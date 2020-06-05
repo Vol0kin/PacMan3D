@@ -2,7 +2,7 @@
  * Clase que representa algunos elementos del juego como la puntuacion, el nivel,
  * las vidas, etc.
  */
-class Game {
+class GameUtils {
     constructor() {
         this.remainingLives = 3;
         this.remainingDots = 0;
@@ -10,10 +10,10 @@ class Game {
 
         this.pacmanSpeed = 3;
         this.ghostSpeed = 2.5;
-        this.SPEED_INCREASE = 0.5;
+        this.SPEED_INCREMENT = 0.5;
         this.MAX_PACMAN_SPEED = 5.5;
         this.MAX_GHOST_SPEED = 5;
-        
+
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
         this.GHOST_POINTS = 100;
@@ -60,7 +60,7 @@ class Game {
             '.': cellType.SMALL_DOT,
             'o': cellType.BIG_DOT,
             'P': cellType.PACMAN,
-            'G': cellType.GHOST 
+            'G': cellType.GHOST
         }
 
         // Audio del principio de la partida
@@ -138,7 +138,7 @@ class Game {
      */
     increasePacmanSpeed() {
         if (this.pacmanSpeed < this.MAX_PACMAN_SPEED) {
-            this.pacmanSpeed += this.SPEED_INCREASE;
+            this.pacmanSpeed += this.SPEED_INCREMENT;
         }
     }
 
@@ -152,7 +152,7 @@ class Game {
      */
     increaseGhostSpeed() {
         if (this.ghostSpeed < this.MAX_GHOST_SPEED) {
-            this.ghostSpeed += this.SPEED_INCREASE;
+            this.ghostSpeed += this.SPEED_INCREMENT;
         }
     }
 

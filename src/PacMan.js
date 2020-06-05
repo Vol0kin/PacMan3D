@@ -45,15 +45,15 @@ class PacMan extends Character3D {
         rightEyeMesh.position.set(-0.1, radiusMouth * Math.sin(eyeAngle), radiusMouth * Math.cos(eyeAngle));
 
         // Crear nodo que representa al personaje
-        this.pacman = new THREE.Object3D();
+        var pacmanNode = new THREE.Object3D();
         
-        this.pacman.add(upperMouthMesh);
-        this.pacman.add(lowerMouthMesh);
-        this.pacman.add(leftEyeMesh);
-        this.pacman.add(rightEyeMesh);
-        this.pacman.position.y += 0.5;
+        pacmanNode.add(upperMouthMesh);
+        pacmanNode.add(lowerMouthMesh);
+        pacmanNode.add(leftEyeMesh);
+        pacmanNode.add(rightEyeMesh);
+        pacmanNode.position.y += 0.5;
 
-        this.add(this.pacman);
+        this.add(pacmanNode);
 
         // Animacion de la boca
         var initMouthPosition = {alfa: 0};

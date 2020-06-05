@@ -80,15 +80,15 @@ class Ghost extends Character3D {
         rightEyeMesh.position.x += 0.3;
 
         // Nodo que representa al fantasma
-        this.ghost = new THREE.Object3D();
+        var ghostMesh = new THREE.Object3D();
         
-        this.ghost.add(this.headMesh);
-        this.ghost.add(this.bodyMesh);
-        this.ghost.add(leftEyeMesh);
-        this.ghost.add(rightEyeMesh);
-        this.ghost.rotation.y = Math.PI/2;
+        ghostMesh.add(this.headMesh);
+        ghostMesh.add(this.bodyMesh);
+        ghostMesh.add(leftEyeMesh);
+        ghostMesh.add(rightEyeMesh);
+        ghostMesh.rotation.y = Math.PI/2;
 
-        this.add(this.ghost);
+        this.add(ghostMesh);
 
         // Animacion que se lanza cuando el fantasma es comestible
         // Tiene una duaracion de 8 segundos

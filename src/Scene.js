@@ -13,7 +13,7 @@ class Scene extends THREE.Scene {
         this.renderer = this.createRenderer(myCanvas);
 
         // Crear objeto que contiene informacion del juego
-        this.game = new Game();
+        this.game = new GameUtils();
 
         // Puntos de spawn del PacMan y de los fantasmas
         this.pacmanSpawnPoint = new THREE.Vector3(0, 0, 0);
@@ -155,7 +155,7 @@ class Scene extends THREE.Scene {
         var ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.position.y = -0.1;
 
-        this.add (ground);
+        this.add(ground);
     }
     
     /**
@@ -165,7 +165,7 @@ class Scene extends THREE.Scene {
     createLights() {
         // Craer luz ambiental
         var ambientLight = new THREE.AmbientLight(0xccddee, 0.35);
-        this.add (ambientLight);
+        this.add(ambientLight);
         
         // Crear luz focal que apunta al (0, 0, 0)
         var spotLight = new THREE.SpotLight(0xffffff, 0.5);
