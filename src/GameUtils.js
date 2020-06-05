@@ -16,7 +16,7 @@ class GameUtils {
 
         this.SMALL_DOT_POINTS = 10;
         this.BIG_DOT_POINTS = 50;
-        this.GHOST_POINTS = 100;
+        this.GHOST_POINTS = 200;
 
         this.eatenGhosts = 0;
 
@@ -113,7 +113,7 @@ class GameUtils {
     }
 
     updateScoreEatenGhost() {
-        this.score += Math.pow(2, this.eatenGhosts) * this.GHOST_POINTS;
+        this.score += Math.pow(2, this.eatenGhosts - 1) * this.GHOST_POINTS;
     }
 
     getEatenGhosts() {
